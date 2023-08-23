@@ -1,0 +1,14 @@
+from pyspark.sql import SparkSession
+
+spark = SparkSession.builder.appName("Spark XML Example").getOrCreate() 
+
+df = spark.read.csv("dbfs:/FileStore/annual.csv")
+
+df.write.format("xml") \
+  .option("codec", "org.apache.hadoop.io.compress.GzipCodec") \
+  .save("gs://bkt-d-use1-lcef-target/xml_output_testing.xml.gz")
+
+spark.stop()
+
+
+The above code is creating as part files like part-00000.gz, part-00001.gz, _SUCCESS and also no extention inplace
