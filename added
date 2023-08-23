@@ -1,0 +1,37 @@
+from pyspark.sql import SparkSession
+from google.cloud import storage
+import os
+import zipfile
+
+# Initialize the spark session
+spark = SparkSession.builder.master("local").getOrCreate()
+
+# Assuming you have some input data in a csv file, convert it to a DataFrame
+df = spark.read.format('com.databricks.spark.csv').options(header='true', inferschema='true').load(<path_to_your_csv>)
+
+# Write the DataFrame as an XML file using spark-xml library
+df.write.format('com.databricks.spark.xml').options(rowTag='root').save('temp.xml')
+
+# Zip the xml file
+with zipfile.ZipFile('temp.xml.zip', 'w', zipfile.ZIP_DEFLATED) as zf:
+    zf.write('temp.xml')
+
+# Authenticate to GCS (Replace 'your-service-account-file.json' with the path to your service account key file)
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "your-service-account-file.json"
+
+# Create a storage client
+storage_client = storage.Client()
+
+# Replace 'your-bucket-name' with the name of your GCS bucket
+bucket = storage_client.get_bucket('your-bucket-name')
+
+# Create a blob for the zipped xml file
+blob = bucket.blob('temp.xml.zip')
+
+# Upload the zipped xml file to GCS
+with open('temp.xml.zip', 'rb') as f:
+    blob.upload_from_file(f)
+
+# Cleanup: delete temporary xml and zipped xml files
+os.remove('temp.xml')
+os.remove('temp.xml.zip')
