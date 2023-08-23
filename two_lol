@@ -1,0 +1,25 @@
+from pyspark.sql import SparkSession
+from pyspark.sql.types import StructType, StructField, StringType
+import os
+
+# Step 1: Create a Spark session
+spark = SparkSession.builder.appName("XMLConversion").getOrCreate()
+
+# Sample input data
+data = [("John", 25), ("Alice", 30), ("Bob", 28)]
+schema = StructType([
+    StructField("Name", StringType(), True),
+    StructField("Age", StringType(), True)
+])
+df = spark.createDataFrame(data, schema)
+
+# Step 2: Convert DataFrame to zipped XML using spark-xml library
+xml_output_path = "gs://your-gcs-bucket-name/xml_output"  # Change to your GCS bucket and desired path
+df.write \
+    .format("com.databricks.spark.xml") \
+    .option("rootTag", "Root") \
+    .option("rowTag", "Row") \
+    .save(xml_output_path)
+
+# Step 3: Stop the Spark session
+spark.stop()
