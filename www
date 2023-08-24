@@ -1,17 +1,20 @@
-import os
 from pyspark.sql import SparkSession
+from google.cloud import storage
 
 spark = SparkSession.builder.appName("Spark XML").getOrCreate()
 
 df = spark.read.csv("data.csv")
 
-# Write to GCS with full file path 
-output_file = "gs://bkt-d-use1-lcef-target/xml_output_hello.xml.gz"
+# Write to GCS  
+output_file = "gs://bucket/output.xml.gz" 
 df.coalesce(1).write.format("xml")\
          .option("compression", "gzip")\
          .save(output_file)
 
 # Delete GCS _SUCCESS file
-os.remove("gs://bkt-d-use1-lcef-target/_SUCCESS")  
+client = storage.Client() 
+bucket = client.bucket("bucket")
+blob = bucket.blob("_SUCCESS")
+blob.delete()
 
 spark.stop()
