@@ -1,0 +1,20 @@
+from pyspark.sql import SparkSession
+
+spark = SparkSession.builder.appName("Spark XML Example").getOrCreate()
+
+df = spark.read.csv("dbfs:/FileStore/annual.csv")
+
+# repartitioning the dataFrame into a single partition and save as a single xml file with gzip compression
+df.repartition(1).write.format("xml") \
+  .option("compression", "gzip") \
+  .save("gs://bkt-d-use1-lcef-target/xml_output_hello.xml.gz")
+
+spark.stop()
+
+
+This above code is giing two files in the output as _SUCCESS
+0 B	application/octet-stream	Aug 23, 2023, 6:48:34 PM	Standard	Aug 23, 2023, 6:48:34 PM		
+part-00000.gz
+334.2 KB	application/octet-stream	Aug 23, 2023, 6:48:33 PM	Standard	Aug 23, 2023, 6:48:33 PM
+
+But I want only part-00000.gz produced in the output, modify the code accordingly
