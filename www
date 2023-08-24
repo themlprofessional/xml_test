@@ -1,38 +1,16 @@
 from pyspark.sql import SparkSession
 
-# create SparkSession
-spark = SparkSession.builder.appName("Spark XML Example").getOrCreate()
-
-# read CSV file
-df = spark.read.csv("dbfs:/FileStore/annual.csv")
-
-# repartition the dataFrame into a single partition and save as a single xml file with gzip compression
-# add option to disable creation of _SUCCESS file
-df.repartition(1).write.format("xml") \
-  .option("compression", "gzip") \
-  .option("mapreduce.fileoutputcommitter.marksuccessfuljobs", "false") \
-  .save("gs://bkt-d-use1-lcef-target/xml_output_hello.xml.gz")
-
-# stop SparkSession
-spark.stop()
-
----------------------------------------------------------------------------------
-
-
-from pyspark.sql import SparkSession
-
-spark = SparkSession.builder.appName("Spark XML Example").getOrCreate()
-
-spark.conf.set("mapreduce.fileoutputcommitter.marksuccessfuljobs", "false")
+spark = SparkSession.builder.appName("spark xml example").getOrCreate()
 
 df = spark.read.csv("dbfs:/FileStore/annual.csv")
 
 # repartitioning the dataFrame into a single partition and save as a single xml file with gzip compression
 df.repartition(1).write.format("xml") \
   .option("compression", "gzip") \
-  .save("gs://bkt-d-use1-lcef-target/xml_output_hello.xml.gz")
+  .save("gs://bkt-d-use1-lcef-target/output_xml.xml.gz")
 
-dbutils.fs.rm("gs://bkt-d-use1-lcef-target/xml_output_hello.xml.gz/_SUCCESS")
+dbutils.fs.rm("gs://bkt-d-use1-lcef-target/output_xml.xml.gz/_SUCCESS")
 
 spark.stop()
 
+This code is writing output data as xml in zip format, but after unzipping the output file, the result xml produced does not have an .xml extension
