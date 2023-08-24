@@ -1,0 +1,17 @@
+import os
+from pyspark.sql import SparkSession
+
+spark = SparkSession.builder.appName("Spark XML").getOrCreate()
+
+df = spark.read.csv("data.csv") 
+
+# Write to single gzip compressed XML file
+output_file = "output.xml.gz"
+df.coalesce(1).write.format("xml")\
+         .option("compression", "gzip")\
+         .save(output_file)
+
+# Delete _SUCCESS file 
+os.remove("_SUCCESS")
+
+spark.stop()
