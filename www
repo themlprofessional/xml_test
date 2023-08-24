@@ -3,15 +3,15 @@ from pyspark.sql import SparkSession
 
 spark = SparkSession.builder.appName("Spark XML").getOrCreate()
 
-df = spark.read.csv("data.csv") 
+df = spark.read.csv("data.csv")
 
-# Write to single gzip compressed XML file
-output_file = "output.xml.gz"
+# Write to GCS with full file path 
+output_file = "gs://bkt-d-use1-lcef-target/xml_output_hello.xml.gz"
 df.coalesce(1).write.format("xml")\
          .option("compression", "gzip")\
          .save(output_file)
 
-# Delete _SUCCESS file 
-os.remove("_SUCCESS")
+# Delete GCS _SUCCESS file
+os.remove("gs://bkt-d-use1-lcef-target/_SUCCESS")  
 
 spark.stop()
