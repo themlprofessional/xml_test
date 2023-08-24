@@ -1,4 +1,18 @@
-from pyspark.sql import SparkSession
+spark = SparkSession.builder.appName("spark xml example").getOrCreate()
+
+df = spark.read.csv("dbfs:/FileStore/annual.csv")
+
+# repartitioning the dataFrame into a single partition and save as a single xml file with gzip compression
+df.repartition(1).write.format("xml") \
+  .option("compression", "gzip") \
+  .option("mode", ("w", "gz")) \
+  .save("gs://bkt-d-use1-lcef-target/output_xml.xml.gz")
+
+dbutils.fs.rm("gs://bkt-d-use1-lcef-target/output_xml.xml.gz/_SUCCESS")
+
+spark.stop()
+
+------------------------------------------
 
 spark = SparkSession.builder.appName("spark xml example").getOrCreate()
 
@@ -7,7 +21,8 @@ df = spark.read.csv("dbfs:/FileStore/annual.csv")
 # repartitioning the dataFrame into a single partition and save as a single xml file with gzip compression
 df.repartition(1).write.format("xml") \
   .option("compression", "gzip") \
-  .save("gs://bkt-d-use1-lcef-target/output_xml.xml.gz/output.xml")
+  .option("extension", ".xml") \
+  .save("gs://bkt-d-use1-lcef-target/output_xml.xml.gz")
 
 dbutils.fs.rm("gs://bkt-d-use1-lcef-target/output_xml.xml.gz/_SUCCESS")
 
