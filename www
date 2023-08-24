@@ -1,20 +1,38 @@
 from pyspark.sql import SparkSession
-from google.cloud import storage
 
-spark = SparkSession.builder.appName("Spark XML").getOrCreate()
+# create SparkSession
+spark = SparkSession.builder.appName("Spark XML Example").getOrCreate()
 
-df = spark.read.csv("data.csv")
+# read CSV file
+df = spark.read.csv("dbfs:/FileStore/annual.csv")
 
-# Write to GCS  
-output_file = "gs://bucket/output.xml.gz" 
-df.coalesce(1).write.format("xml")\
-         .option("compression", "gzip")\
-         .save(output_file)
+# repartition the dataFrame into a single partition and save as a single xml file with gzip compression
+# add option to disable creation of _SUCCESS file
+df.repartition(1).write.format("xml") \
+  .option("compression", "gzip") \
+  .option("mapreduce.fileoutputcommitter.marksuccessfuljobs", "false") \
+  .save("gs://bkt-d-use1-lcef-target/xml_output_hello.xml.gz")
 
-# Delete GCS _SUCCESS file
-client = storage.Client() 
-bucket = client.bucket("bucket")
-blob = bucket.blob("_SUCCESS")
-blob.delete()
+# stop SparkSession
+spark.stop()
+
+---------------------------------------------------------------------------------
+
+
+from pyspark.sql import SparkSession
+
+spark = SparkSession.builder.appName("Spark XML Example").getOrCreate()
+
+spark.conf.set("mapreduce.fileoutputcommitter.marksuccessfuljobs", "false")
+
+df = spark.read.csv("dbfs:/FileStore/annual.csv")
+
+# repartitioning the dataFrame into a single partition and save as a single xml file with gzip compression
+df.repartition(1).write.format("xml") \
+  .option("compression", "gzip") \
+  .save("gs://bkt-d-use1-lcef-target/xml_output_hello.xml.gz")
+
+dbutils.fs.rm("gs://bkt-d-use1-lcef-target/xml_output_hello.xml.gz/_SUCCESS")
 
 spark.stop()
+
