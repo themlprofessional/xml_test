@@ -1,0 +1,17 @@
+from pyspark.sql import SparkSession
+
+spark = SparkSession.builder.appName("Spark XML Example").getOrCreate()
+
+df = spark.read.csv("dbfs:/FileStore/annual.csv") 
+
+# Repartition to 1 partition
+df = df.coalesce(1)
+
+# Specify full file path to write to single file 
+output_file = "gs://bkt-d-use1-lcef-target/xml_output_hello.xml.gz"
+
+df.write.format("xml")\
+  .option("compression", "gzip")\
+  .save(output_file) 
+
+spark.stop()
